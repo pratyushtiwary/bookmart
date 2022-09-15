@@ -1,24 +1,33 @@
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
+import Onboard from "./pages/onboard";
+import "./App.css";
+import Recommend from "pages/recommend";
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: "#231955",
+    },
+    secondary: {
+      main: "#000",
+    },
+  },
+  typography: {
+    fontFamily: ["Yaldevi", "sans-serif"].join(","),
+  },
+});
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ThemeProvider theme={theme}>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Onboard />} />
+          <Route path="/recommend" element={<Recommend />} />
+        </Routes>
+      </Router>
+    </ThemeProvider>
   );
 }
 

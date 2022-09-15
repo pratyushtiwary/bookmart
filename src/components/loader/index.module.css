@@ -1,0 +1,50 @@
+.loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999999;
+}
+
+.loader.fullScreen .container {
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transform: none;
+  padding: 0;
+  border-radius: 0;
+}
+
+.loader .opacity {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: -1;
+}
+
+.loader .container {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  padding: 10px;
+  border-radius: 5px;
+  display: grid;
+  align-items: center;
+  justify-items: center;
+}
+
+.loader .container .child {
+  display: grid;
+  justify-items: center;
+}
+
+.loader .container .loadingTxt {
+  margin-top: 10px;
+}

@@ -1,0 +1,23 @@
+.toolbar {
+  display: flex;
+}
+
+.bannerImg {
+  max-height: 75px;
+  max-width: calc(100% - 120px);
+}
+
+.bannerTxt {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%);
+  text-transform: uppercase;
+  font-weight: 700 !important;
+}
+
+@media screen and (max-width: 496px) {
+  .bannerTxt {
+    width: 100%;
+    text-align: center;
+  }
+}
