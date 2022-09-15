@@ -45,7 +45,7 @@ def get_search_result():
     term = params.get('term','')
     last = params.get('last',0)
 
-    results = book.select('*').filter(f'lower(Title) LIKE "%{term}%"').limit(last,10).run()
+    results = book.select('*').filter(f'lower(Title) LIKE \'%{term.lower()}%\'').run()
 
 
     return jsonify({

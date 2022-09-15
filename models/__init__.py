@@ -78,7 +78,6 @@ class DBUtils:
     
     def filter(self,condition):
         self.query += f"WHERE {condition} "
-
         return self
 
     def limit(self,m,n):
