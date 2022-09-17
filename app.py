@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, send_from_directory
 from models.Books import Book
-from utils import flatten
+from utils import flatten, unique
 
 app = Flask(__name__,static_url_path='',static_folder='public')
 
@@ -15,7 +15,8 @@ def recommend_route():
     for bookname in params.get('books',[]):
         recommendations.append(temp.recommend(bookname))
     
-    recommendations = flatten(recommendations)
+    recommendations = unique(flatten(recommendations),"ID")
+
 
     return jsonify({
         "recommendations": recommendations
@@ -45,7 +46,7 @@ def get_search_result():
     term = params.get('term','')
     last = params.get('last',0)
 
-    results = book.select('*').filter(f'lower(Title) LIKE \'%{term.lower()}%\'').run()
+    results = book.select('*').filter(f'lower(Title) LIKE \'%{term.lower()}%\'').limit(last,10).run()
 
 
     return jsonify({
@@ -77,6 +78,7 @@ def main1():
 def main2():
     return send_from_directory('public', 'index.html')
 
+@app.after_request
 def after_request(response):
   response.headers.add('Access-Control-Allow-Origin', '*')
   response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')

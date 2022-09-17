@@ -81,7 +81,7 @@ class DBUtils:
         return self
 
     def limit(self,m,n):
-        self.query += f"AND ID > {m} AND ID < {m+n+1}"
+        self.query += f"LIMIT {n} OFFSET {m}"
 
         return self
 
