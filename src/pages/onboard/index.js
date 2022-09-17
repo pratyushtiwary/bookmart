@@ -29,12 +29,16 @@ export default function Onboard(props) {
   const maxWidth = useMediaQuery("(max-width: 864px)");
   const [loading, setLoading] = useState(true);
   const [books, setBooks] = useState([]);
-  const [selected, setSelected] = useState([]);
+  const [selected, setSelected] = useState({});
   const [newBooks, makeBookFetchingRequest] = useRequest("/api/books");
   const [searchedBooks, makeSearchBookFetchingRequest] =
     useRequest("/api/search");
   const [searchTerm, setSearchTerm] = useState("");
   const [loadingMore, setLoadingMore] = useState(false);
+  const [continueEnabled, setContinueEnabled] = useState(false);
+  const [noBooksFound, setNoBooksFound] = useState(false);
+  const [haveMore, setHaveMore] = useState(true);
+  const [loadingData, setLoadingData] = useState(false);
 
   useEffect(() => {
     makeBookFetchingRequest({
@@ -44,6 +48,7 @@ export default function Onboard(props) {
   }, []);
 
   useEffect(() => {
+    setLoadingData(false);
     if (newBooks?.results && books.length !== last + offset) {
       if (loading === true) {
         setLoading(false);
@@ -58,6 +63,18 @@ export default function Onboard(props) {
   }, [newBooks]);
 
   useEffect(() => {
+    setLoadingData(false);
+    if (last === 0 && searchedBooks?.results?.length === 0) {
+      setHaveMore(false);
+      setNoBooksFound(true);
+      return;
+    } else if (searchedBooks?.results?.length === 0) {
+      setHaveMore(false);
+    } else {
+      setNoBooksFound(false);
+      setHaveMore(true);
+    }
+
     if (last === 0 && searchedBooks?.results) {
       setBooks([...searchedBooks.results]);
     } else if (searchedBooks?.results && books.length !== last + offset) {
@@ -67,15 +84,25 @@ export default function Onboard(props) {
   }, [searchedBooks]);
 
   const toggleSelected = (i) => () => {
-    console.log(i);
     setSelected((oldSelected) => {
       oldSelected[i] = !oldSelected[i];
-      return [...oldSelected];
+
+      if (
+        Object.keys(oldSelected).filter((e) => Boolean(oldSelected[e])).length >
+        2
+      ) {
+        setContinueEnabled(true);
+      } else {
+        setContinueEnabled(false);
+      }
+
+      console.log(oldSelected);
+      return { ...oldSelected };
     });
   };
 
   function loadMore() {
-    last = books.pop().ID;
+    last += offset;
     if (lastOpr === "s") {
       makeSearchBookFetchingRequest({
         term: searchTerm,
@@ -94,8 +121,12 @@ export default function Onboard(props) {
       last = 0;
     }
 
+    setBooks([]);
+
     if (e.target.value.replace(" ", "") === "") {
       lastOpr = "f";
+      setNoBooksFound(false);
+      setLoadingData(true);
       makeBookFetchingRequest({
         last: last,
       });
@@ -103,6 +134,7 @@ export default function Onboard(props) {
       lastOpr = "s";
       clearTimeout(timeout);
       timeout = setTimeout(() => {
+        setLoadingData(true);
         makeSearchBookFetchingRequest({
           term: e.target.value,
           last: last,
@@ -112,12 +144,7 @@ export default function Onboard(props) {
   }
 
   function next() {
-    const names = [];
-    selected.forEach((e, i) => {
-      if (e) {
-        names.push(books[i].Title);
-      }
-    });
+    const names = Object.keys(selected).filter((e) => Boolean(selected[e]));
     window.localStorage.setItem("books", JSON.stringify(names));
     window.location.href = "/recommend";
   }
@@ -130,10 +157,16 @@ export default function Onboard(props) {
       <Loader visible={loading} fullScreen />
       <Header />
       <Overlay intensity={0.75} fixed />
+      <Loader visible={loadingData} />
       <section className={styles.section}>
         <Typography variant="h6" className={styles.title}>
           Pick atleast 3 books of your likings
         </Typography>
+        {noBooksFound && (
+          <Typography variant="h6" className={styles.title}>
+            No Books Found!
+          </Typography>
+        )}
         <div className={styles.books}>
           {books.map((e, i) => (
             <motion.div
@@ -145,7 +178,7 @@ export default function Onboard(props) {
               }}
               key={i}
             >
-              <Card className={styles.book} onClick={toggleSelected(i)}>
+              <Card className={styles.book} onClick={toggleSelected(e.Title)}>
                 <CardActionArea className={styles.bookInner}>
                   <CardMedia
                     component="img"
@@ -154,8 +187,8 @@ export default function Onboard(props) {
                     alt={"Cover of " + e.Title}
                   />
                   <Checkbox
-                    checked={Boolean(selected[i])}
-                    onChange={toggleSelected(i)}
+                    checked={Boolean(selected[e.Title])}
+                    onChange={toggleSelected(e.Title)}
                     className={styles.checkbox}
                     sx={{
                       color: "#ceb900",
@@ -177,37 +210,40 @@ export default function Onboard(props) {
               </Card>
             </motion.div>
           ))}
-          <motion.div
-            initial={{
-              opacity: 0,
-            }}
-            animate={{
-              opacity: 1,
-            }}
-            transition={{
-              delay: books.length * 0.15,
-            }}
-          >
-            <Card className={styles.book + " " + styles.loadMore}>
-              <CardActionArea
-                className={styles.bookInner}
-                onClick={loadMore}
-                loading={loadingMore}
-              >
-                <CardContent>
-                  <Typography variant="h4" className={styles.bookTitle}>
-                    +
-                  </Typography>
-                  <Typography variant="h5" className={styles.bookAuthor}>
-                    Load More
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-            </Card>
-          </motion.div>
+          {haveMore && (
+            <motion.div
+              initial={{
+                opacity: 0,
+              }}
+              animate={{
+                opacity: 1,
+              }}
+              transition={{
+                delay: books.length * 0.15,
+              }}
+            >
+              <Card className={styles.book + " " + styles.loadMore}>
+                <CardActionArea
+                  className={styles.bookInner}
+                  onClick={loadMore}
+                  loading={loadingMore}
+                >
+                  <CardContent>
+                    <Typography variant="h4" className={styles.bookTitle}>
+                      +
+                    </Typography>
+                    <Typography variant="h5" className={styles.bookAuthor}>
+                      Load More
+                    </Typography>
+                  </CardContent>
+                </CardActionArea>
+              </Card>
+            </motion.div>
+          )}
         </div>
         <AnimatePresence>
-          {selected.filter((e) => Boolean(e)).length > 0 && (
+          {Object.keys(selected).filter((e) => Boolean(selected[e])).length >
+            0 && (
             <motion.div
               initial={{ y: 500 }}
               animate={{ y: 0 }}
@@ -216,7 +252,11 @@ export default function Onboard(props) {
             >
               <div className={styles.selectedCount}>
                 <Typography variant="subtitle1">
-                  {selected.filter((e) => Boolean(e)).length} book(s) selected
+                  {
+                    Object.keys(selected).filter((e) => Boolean(selected[e]))
+                      .length
+                  }{" "}
+                  book(s) selected
                 </Typography>
               </div>
             </motion.div>
@@ -243,6 +283,7 @@ export default function Onboard(props) {
             className={styles.continueBtn}
             variant="outlined"
             onClick={next}
+            disabled={!continueEnabled}
           >
             Continue {">"}
           </Button>

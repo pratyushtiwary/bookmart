@@ -8,7 +8,6 @@ export default function useRequest(url) {
     axios
       .post(url, params)
       .then((c) => {
-        console.log(c, c.data);
         setData({ ...c.data });
       })
       .catch((e) => {
